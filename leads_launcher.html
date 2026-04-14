@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b25;
+    --surface2: #1e2535;
+    --border: #252d3d;
+    --border2: #2f3a50;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+    --font-ui: 'DM Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .app-title {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .version-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .stat-pill:hover { border-color: var(--border2); color: var(--text); }
+  .stat-pill .count { color: var(--text); font-weight: 500; }
+  .stat-pill.active-filter { border-color: var(--accent); color: var(--accent); }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    gap: 20px;
+  }
+
+  /* PANELS */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .panel-body { padding: 16px; }
+  .panel-body.collapsed { display: none; }
+
+  /* IMPORT */
+  .import-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: border-color 0.15s;
+    line-height: 1.6;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  .import-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0e1117;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { opacity: 0.88; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--border2);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: #3d1f1f;
+  }
+  .btn-danger:hover { background: #1f1010; }
+
+  .btn-sm { font-size: 12px; padding: 5px 10px; }
+
+  /* CONTROLS */
+  .controls-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus { border-color: var(--accent); }
+
+  .leads-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* LEAD CARDS */
+  .leads-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lead-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .lead-card:hover { border-color: var(--border2); }
+  .lead-card.disqualified { opacity: 0.45; }
+
+  .lead-main {
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lead-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 22px;
+  }
+
+  .lead-info { min-width: 0; }
+
+  .lead-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lead-url {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    opacity: 0.75;
+  }
+
+  .lead-url:hover { opacity: 1; text-decoration: underline; }
+
+  .lead-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* STATUS SELECT */
+  .status-select {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .status-new       { background: #1a2030; color: var(--muted); border-color: var(--border2); }
+  .status-inmail    { background: #0f1e38; color: var(--accent); border-color: #1a3558; }
+  .status-pos       { background: #0f2a1a; color: var(--green); border-color: #1a4a2a; }
+  .status-neg       { background: #2a0f0f; color: var(--red); border-color: #4a1a1a; }
+  .status-meeting   { background: #1e1030; color: var(--purple); border-color: #3a1e55; }
+  .status-joined    { background: #0f2a28; color: var(--teal); border-color: #1a4a45; }
+  .status-disq      { background: #181a1e; color: #4a5568; border-color: #252830; }
+
+  /* TYPE BADGE */
+  .type-toggle {
+    display: flex;
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .type-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    cursor: pointer;
+    transition: all 0.1s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .type-btn.active-founder { background: #0f2a4a; color: var(--accent); }
+  .type-btn.active-hr      { background: #1e0f3a; color: var(--purple); }
+
+  /* EXPAND TOGGLE */
+  .expand-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .expand-btn:hover { color: var(--text); }
+
+  /* LEAD DETAIL FORM */
+  .lead-detail {
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    background: var(--bg);
+    display: none;
+  }
+
+  .lead-detail.open { display: block; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+
+  .form-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    padding: 6px 9px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 10px 16px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s ease;
+    z-index: 1000;
+    max-width: 320px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 700px) {
+    .lead-main { grid-template-columns: auto 1fr; }
+    .lead-controls { grid-column: 1 / -1; flex-wrap: wrap; }
+    .stats-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="app-title">Leads Launcher</span>
+    <span class="version-tag">v3</span>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+</div>
+
+<div class="main">
+
+  <!-- IMPORT PANEL -->
+  <div class="panel" id="importPanel">
+    <div class="panel-header" onclick="togglePanel('importBody', 'importChevron')">
+      <span class="panel-title">Import Leads</span>
+      <span id="importChevron">▾</span>
+    </div>
+    <div class="panel-body" id="importBody">
+      <div class="import-row">
+        <div>
+          <textarea id="pasteArea" rows="6" placeholder="Paste leads here. One per line. Flexible formats accepted:
+  Name | LinkedIn URL
+  Name, LinkedIn URL
+  Name [tab] LinkedIn URL
+  Just a LinkedIn URL (name extracted from URL)"></textarea>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">
+            Existing leads with matching URLs are skipped. New leads are appended.
+          </p>
+        </div>
+        <div class="import-actions">
+          <button class="btn btn-primary" onclick="importLeads()">+ Import</button>
+          <button class="btn btn-ghost" onclick="openAllNew()">Open New</button>
+          <hr style="border-color:var(--border);margin:4px 0;">
+          <button class="btn btn-danger btn-sm" onclick="clearAll()">Clear All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS PANEL -->
+  <div class="panel">
+    <div class="panel-header" style="cursor:default;">
+      <span class="panel-title">Leads</span>
+      <div class="controls-row">
+        <select id="filterStatus" onchange="renderLeads()">
+          <option value="all">All statuses</option>
+          <option value="new">New</option>
+          <option value="inmail">InMail Sent</option>
+          <option value="responded-pos">Responded (+)</option>
+          <option value="responded-neg">Responded (-)</option>
+          <option value="meeting">Meeting Scheduled</option>
+          <option value="joined">Joined Community</option>
+          <option value="disqualified">Disqualified</option>
+        </select>
+        <select id="filterType" onchange="renderLeads()">
+          <option value="all">All types</option>
+          <option value="founder">Founders</option>
+          <option value="hr">HR Pros</option>
+        </select>
+        <span class="leads-count" id="leadsCount"></span>
+      </div>
+    </div>
+    <div class="panel-body" id="leadsListContainer">
+      <div class="leads-list" id="leadsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'leads_launcher_v3';
+
+let leads = [];
+let expandedIds = new Set();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    leads = raw ? JSON.parse(raw) : [];
+  } catch { leads = []; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+}
+
+// ─── PARSING ─────────────────────────────────────────────────────────────────
+function parseInput(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const newLeads = [];
+
+  lines.forEach(line => {
+    let name = '', url = '';
+
+    // Try separators: pipe, tab, comma
+    const separators = [/\s*\|\s*/, /\t/, /,\s*/];
+    let parts = null;
+
+    for (const sep of separators) {
+      const split = line.split(sep);
+      if (split.length >= 2) {
+        // Figure out which part is the URL
+        const urlIdx = split.findIndex(p => p.includes('linkedin.com') || p.startsWith('http'));
+        if (urlIdx !== -1) {
+          url = split[urlIdx].trim();
+          name = split.filter((_, i) => i !== urlIdx).join(' ').trim();
+          parts = true;
+          break;
+        }
+      }
+    }
+
+    // If no separator found, check if line is just a URL
+    if (!parts) {
+      if (line.includes('linkedin.com') || line.startsWith('http')) {
+        url = line;
+        // Try to extract name from URL slug
+        const slug = url.split('/in/').pop()?.replace(/\/$/, '').replace(/-/g, ' ');
+        name = slug ? slug.replace(/\b\w/g, c => c.toUpperCase()) : 'Unknown';
+      } else {
+        name = line;
+        url = '';
+      }
+    }
+
+    // Normalize URL
+    url = url.replace(/^(?!http)/, 'https://').trim();
+
+    // Deduplicate: skip if URL already exists
+    const exists = leads.some(l => l.linkedinUrl === url) || newLeads.some(l => l.linkedinUrl === url);
+    if (exists) return;
+
+    newLeads.push({
+      id: Date.now() + Math.random(),
+      name: name || 'Unknown',
+      linkedinUrl: url,
+      type: 'founder',
+      status: 'new',
+      // Shared fields
+      persona: '',
+      company: '',
+      notes: '',
+      dateSent: '',
+      // Founder-specific
+      meetingDate: '',
+      followUp: '',
+      // HR-specific
+      internalPOC: '',
+      email: '',
+      contactMethod: '',
+      slackInvited: '',
+      specialties: '',
+      addedAt: new Date().toISOString()
+    });
+  });
+
+  return newLeads;
+}
+
+function importLeads() {
+  const text = document.getElementById('pasteArea').value;
+  if (!text.trim()) { toast('Paste some leads first.'); return; }
+
+  const newLeads = parseInput(text);
+  if (newLeads.length === 0) {
+    toast('No new leads found (duplicates skipped).');
+    return;
+  }
+
+  leads = [...leads, ...newLeads];
+  save();
+  document.getElementById('pasteArea').value = '';
+  renderLeads();
+  updateStats();
+  toast(`+ ${newLeads.length} lead${newLeads.length > 1 ? 's' : ''} added`);
+}
+
+// ─── OPEN PROFILES ───────────────────────────────────────────────────────────
+function openAllNew() {
+  const statusFilter = document.getElementById('filterStatus').value;
+  const typeFilter = document.getElementById('filterType').value;
+
+  let targets = leads.filter(l => {
+    if (statusFilter !== 'all' && l.status !== statusFilter) return false;
+    if (typeFilter !== 'all' && l.type !== typeFilter) return false;
+    return l.linkedinUrl && l.linkedinUrl.includes('linkedin');
+  });
+
+  if (targets.length === 0) { toast('No leads with LinkedIn URLs match current filters.'); return; }
+  if (targets.length > 20) {
+    if (!confirm(`Open ${targets.length} tabs? That's a lot. Continue?`)) return;
+  }
+
+  targets.forEach(l => window.open(l.linkedinUrl, '_blank'));
+  toast(`Opened ${targets.length} profile${targets.length > 1 ? 's' : ''}`);
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+const STATUS_LABELS = {
+  'new':           { label: 'New',              cls: 'status-new' },
+  'inmail':        { label: 'InMail Sent',       cls: 'status-inmail' },
+  'responded-pos': { label: 'Responded (+)',     cls: 'status-pos' },
+  'responded-neg': { label: 'Responded (-)',     cls: 'status-neg' },
+  'meeting':       { label: 'Meeting Scheduled', cls: 'status-meeting' },
+  'joined':        { label: 'Joined Community',  cls: 'status-joined' },
+  'disqualified':  { label: 'Disqualified',      cls: 'status-disq' },
+};
+
+function getStatusClass(status) {
+  return STATUS_LABELS[status]?.cls || 'status-new';
+}
+
+function renderLeads() {
+  const statusFilter = document.getElementById('filterStatus').value;
+  const typeFilter   = document.getElementById('filterType').value;
+  const container    = document.getElementById('leadsList');
+
+  let visible = leads.filter(l => {
+    if (statusFilter !== 'all' && l.status !== statusFilter) return false;
+    if (typeFilter !== 'all' && l.type !== typeFilter) return false;
+    return true;
+  });
+
+  document.getElementById('leadsCount').textContent =
+    `${visible.length} of ${leads.length} lead${leads.length !== 1 ? 's' : ''}`;
+
+  if (leads.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🚀</div>
+        <div class="empty-title">No leads yet</div>
+        <div class="empty-sub">Paste a list above and hit Import to get started.</div>
+      </div>`;
+    return;
+  }
+
+  if (visible.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No leads match these filters</div>
+        <div class="empty-sub">Try changing the status or type filter.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = visible.map((lead, i) => {
+    const isExpanded  = expandedIds.has(lead.id);
+    const statusCls   = getStatusClass(lead.status);
+    const statusLabel = STATUS_LABELS[lead.status]?.label || 'New';
+    const isDisq      = lead.status === 'disqualified';
+    const globalIdx   = leads.indexOf(lead) + 1;
+
+    const founderFields = `
+      <div class="form-field"><label class="form-label">Persona</label>
+        <input class="form-input" value="${esc(lead.persona)}" oninput="updateField('${lead.id}','persona',this.value)" placeholder="e.g. AI-native founder"></div>
+      <div class="form-field"><label class="form-label">Company</label>
+        <input class="form-input" value="${esc(lead.company)}" oninput="updateField('${lead.id}','company',this.value)"></div>
+      <div class="form-field"><label class="form-label">Date Sent</label>
+        <input class="form-input" type="date" value="${esc(lead.dateSent)}" oninput="updateField('${lead.id}','dateSent',this.value)"></div>
+      <div class="form-field"><label class="form-label">Meeting Date</label>
+        <input class="form-input" type="date" value="${esc(lead.meetingDate)}" oninput="updateField('${lead.id}','meetingDate',this.value)"></div>
+      <div class="form-field"><label class="form-label">Who Should Follow Up</label>
+        <input class="form-input" value="${esc(lead.followUp)}" oninput="updateField('${lead.id}','followUp',this.value)"></div>
+      <div class="form-field"><label class="form-label">Notes</label>
+        <input class="form-input" value="${esc(lead.notes)}" oninput="updateField('${lead.id}','notes',this.value)"></div>
+    `;
+
+    const hrFields = `
+      <div class="form-field"><label class="form-label">Persona</label>
+        <input class="form-input" value="${esc(lead.persona)}" oninput="updateField('${lead.id}','persona',this.value)" placeholder="e.g. CHRO"></div>
+      <div class="form-field"><label class="form-label">Company</label>
+        <input class="form-input" value="${esc(lead.company)}" oninput="updateField('${lead.id}','company',this.value)"></div>
+      <div class="form-field"><label class="form-label">Internal POC</label>
+        <input class="form-input" value="${esc(lead.internalPOC)}" oninput="updateField('${lead.id}','internalPOC',this.value)"></div>
+      <div class="form-field"><label class="form-label">Email</label>
+        <input class="form-input" type="email" value="${esc(lead.email)}" oninput="updateField('${lead.id}','email',this.value)"></div>
+      <div class="form-field"><label class="form-label">Contact Method</label>
+        <input class="form-input" value="${esc(lead.contactMethod)}" oninput="updateField('${lead.id}','contactMethod',this.value)" placeholder="e.g. LinkedIn, Email"></div>
+      <div class="form-field"><label class="form-label">Date Sent</label>
+        <input class="form-input" type="date" value="${esc(lead.dateSent)}" oninput="updateField('${lead.id}','dateSent',this.value)"></div>
+      <div class="form-field"><label class="form-label">Slack Invited</label>
+        <select class="form-input" onchange="updateField('${lead.id}','slackInvited',this.value)">
+          <option value="" ${!lead.slackInvited?'selected':''}>-</option>
+          <option value="1" ${lead.slackInvited==='1'?'selected':''}>Yes</option>
+          <option value="0" ${lead.slackInvited==='0'?'selected':''}>No</option>
+        </select></div>
+      <div class="form-field"><label class="form-label">Specialties</label>
+        <input class="form-input" value="${esc(lead.specialties)}" oninput="updateField('${lead.id}','specialties',this.value)"></div>
+      <div class="form-field"><label class="form-label">Notes</label>
+        <input class="form-input" value="${esc(lead.notes)}" oninput="updateField('${lead.id}','notes',this.value)"></div>
+    `;
+
+    return `
+      <div class="lead-card ${isDisq ? 'disqualified' : ''}" id="card-${lead.id}">
+        <div class="lead-main">
+          <span class="lead-num">${globalIdx}</span>
+          <div class="lead-info">
+            <div class="lead-name">${esc(lead.name)}</div>
+            ${lead.linkedinUrl
+              ? `<a class="lead-url" href="${esc(lead.linkedinUrl)}" target="_blank">${esc(lead.linkedinUrl)}</a>`
+              : '<span class="lead-url" style="color:var(--muted)">no url</span>'}
+          </div>
+          <div class="lead-controls">
+            <div class="type-toggle">
+              <button class="type-btn ${lead.type==='founder'?'active-founder':''}"
+                onclick="updateField('${lead.id}','type','founder'); renderLeads(); updateStats();">F</button>
+              <button class="type-btn ${lead.type==='hr'?'active-hr':''}"
+                onclick="updateField('${lead.id}','type','hr'); renderLeads(); updateStats();">HR</button>
+            </div>
+            <select class="status-select ${statusCls}"
+              onchange="updateField('${lead.id}','status',this.value); renderLeads(); updateStats();">
+              ${Object.entries(STATUS_LABELS).map(([val, {label}]) =>
+                `<option value="${val}" ${lead.status===val?'selected':''}>${label}</option>`
+              ).join('')}
+            </select>
+            <button class="expand-btn" onclick="toggleExpand('${lead.id}')" title="Expand">
+              ${isExpanded ? '▴' : '▾'}
+            </button>
+          </div>
+        </div>
+        <div class="lead-detail ${isExpanded ? 'open' : ''}" id="detail-${lead.id}">
+          <div class="form-grid">
+            ${lead.type === 'hr' ? hrFields : founderFields}
+          </div>
+          <div class="detail-actions">
+            <button class="btn btn-ghost btn-sm" onclick="copyTrackerRow('${lead.id}')">
+              Copy Tracker Row →
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="removeLead('${lead.id}')">
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── FIELD UPDATES ────────────────────────────────────────────────────────────
+function updateField(id, field, value) {
+  const lead = leads.find(l => String(l.id) === String(id));
+  if (!lead) return;
+  lead[field] = value;
+  save();
+}
+
+function toggleExpand(id) {
+  if (expandedIds.has(id)) expandedIds.delete(id);
+  else expandedIds.add(id);
+  renderLeads();
+}
+
+function removeLead(id) {
+  leads = leads.filter(l => String(l.id) !== String(id));
+  expandedIds.delete(id);
+  save();
+  renderLeads();
+  updateStats();
+  toast('Lead removed');
+}
+
+function clearAll() {
+  if (!confirm('Clear all leads? This cannot be undone.')) return;
+  leads = [];
+  expandedIds.clear();
+  save();
+  renderLeads();
+  updateStats();
+  toast('All leads cleared');
+}
+
+// ─── COPY TRACKER ROW ─────────────────────────────────────────────────────────
+function copyTrackerRow(id) {
+  const lead = leads.find(l => String(l.id) === String(id));
+  if (!lead) return;
+
+  const statusToResponse = {
+    'new': 'Pending', 'inmail': 'Pending',
+    'responded-pos': 'Yes', 'responded-neg': 'No',
+    'meeting': 'Yes', 'joined': 'Yes',
+    'manual': 'Pending', 'disqualified': 'No'
+  };
+
+  const msgSent = ['inmail','responded-pos','responded-neg','meeting','joined'].includes(lead.status) ? 'Y' : 'N';
+  const response = statusToResponse[lead.status] || 'Pending';
+
+  let row;
+  let tabName;
+
+  if (lead.type === 'hr') {
+    // HR Pros: Name, LinkedIn, Persona, Internal POC, Company, Email, Contact Method, Date Sent, Response Status, Slack Invited, Specialties, Notes
+    tabName = 'HR Pros';
+    row = [
+      lead.name, lead.linkedinUrl, lead.persona, lead.internalPOC,
+      lead.company, lead.email, lead.contactMethod, lead.dateSent,
+      response, lead.slackInvited === '1' ? 'Y' : lead.slackInvited === '0' ? 'N' : '',
+      lead.specialties, lead.notes
+    ];
+  } else {
+    // Founders: Name, LinkedIn URL, Persona, Company, Message Sent (Y/N), Date Sent, Response (Y/N/Pending), Meeting date, Notes, Who Should Follow Up
+    tabName = 'Founders';
+    row = [
+      lead.name, lead.linkedinUrl, lead.persona, lead.company,
+      msgSent, lead.dateSent, response, lead.meetingDate,
+      lead.notes, lead.followUp
+    ];
+  }
+
+  const tsv = row.map(v => (v || '').replace(/\t/g, ' ')).join('\t');
+
+  navigator.clipboard.writeText(tsv).then(() => {
+    toast(`Row copied. Paste into the ${tabName} tab.`);
+  }).catch(() => {
+    // Fallback for browsers that block clipboard
+    const ta = document.createElement('textarea');
+    ta.value = tsv;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast(`Row copied. Paste into the ${tabName} tab.`);
+  });
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const bar = document.getElementById('statsBar');
+  const statusCounts = {};
+  Object.keys(STATUS_LABELS).forEach(s => statusCounts[s] = 0);
+  leads.forEach(l => { if (statusCounts[l.status] !== undefined) statusCounts[l.status]++; });
+
+  const total = leads.length;
+  const pills = [
+    { label: 'Total', count: total, key: 'all' },
+    { label: 'New', count: statusCounts['new'], key: 'new' },
+    { label: 'Sent', count: statusCounts['inmail'], key: 'inmail' },
+    { label: 'Pos', count: statusCounts['responded-pos'], key: 'responded-pos' },
+    { label: 'Meeting', count: statusCounts['meeting'], key: 'meeting' },
+    { label: 'Joined', count: statusCounts['joined'], key: 'joined' },
+    { label: 'Disq', count: statusCounts['disqualified'], key: 'disqualified' },
+  ].filter(p => p.key === 'all' || p.count > 0);
+
+  bar.innerHTML = pills.map(p => `
+    <span class="stat-pill" onclick="quickFilter('${p.key}')">
+      ${p.label} <span class="count">${p.count}</span>
+    </span>`).join('');
+}
+
+function quickFilter(key) {
+  document.getElementById('filterStatus').value = key;
+  renderLeads();
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function togglePanel(bodyId, chevronId) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById(chevronId);
+  body.classList.toggle('collapsed');
+  chev.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+load();
+renderLeads();
+updateStats();
+</script>
+</body>
+</html>
